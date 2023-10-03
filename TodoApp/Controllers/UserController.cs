@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Dto;
-using TodoApp.Models;
 using TodoApp.Services;
 
 namespace TodoApp.Controllers;
 
-[Route("api/[controller]/[Action]")]
+[Route("api/users")]
 [ApiController]
 public class UsersController : ControllerBase
 {
@@ -20,8 +19,8 @@ public class UsersController : ControllerBase
         _service = userService;
     }
 
-    [HttpGet]
-    public async Task<List<UserGetDto>> Get(int page = 1, int pageSize = 10)
+    [HttpGet("")]
+    public async Task<List<UserGetDto?>> Get(int page = 1, int pageSize = 10)
     {
         //get users
         var users = await _service.GetAsync(page, pageSize);
@@ -33,7 +32,7 @@ public class UsersController : ControllerBase
         return (await Task.WhenAll(tasks)).ToList();
     }
 
-    [HttpPost]
+    [HttpPost("")]
     public async Task<IActionResult> Add(UserCreateDto user)
     {
         var response = new ResponseDTO();
@@ -66,7 +65,37 @@ public class UsersController : ControllerBase
             var user = await _service.UpdateAsync(dto);
             response.IsSuccess = true;
             response.Message = "Success";
-            _logger.Log(LogLevel.Trace, "User updated {}", user);
+            _logger.Log(LogLevel.Information, "User updated {}", user);
+        }
+        catch (Exception ex)
+        {
+            response.IsSuccess = false;
+            response.Message = "Exception Occurs : " + ex.Message;
+        }
+
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<UserGetDto?> GetById(
+        [FromRoute] Guid id
+    )
+    {
+        return await _service.GetById(id);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        [FromRoute] Guid id
+    )
+    {
+        var response = new ResponseDTO();
+        try
+        {
+            await _service.DeleteById(id);
+            response.IsSuccess = true;
+            response.Message = "Success";
+            _logger.Log(LogLevel.Information, "User delete {}", id);
         }
         catch (Exception ex)
         {

@@ -14,8 +14,6 @@ builder.Services
             .GetSection("MongoDB:ConnectionUri").Value);
         return client.GetDatabase(builder.Configuration.GetSection("MongoDB:DatabaseName").Value);
     })
-    .AddSingleton<UserRepository>()
-    .AddSingleton<TodoRepository>()
     .AddSingleton<UserService>()
     .AddSingleton<TodoService>();
 

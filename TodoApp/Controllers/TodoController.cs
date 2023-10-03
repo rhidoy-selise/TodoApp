@@ -4,7 +4,7 @@ using TodoApp.Services;
 
 namespace TodoApp.Controllers;
 
-[Route("api/[controller]/[Action]")]
+[Route("api/todos")]
 [ApiController]
 public class TodosController : ControllerBase
 {
@@ -20,8 +20,9 @@ public class TodosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<List<TodoGetDto>> Get(int page, int pageSize)
+    public async Task<List<TodoGetDto>> Get(int page = 1, int pageSize = 10)
     {
+        _logger.Log(LogLevel.Information, "Todo get call");
         return await _todoService.GetAsync(page, pageSize);
     }
 
@@ -34,7 +35,7 @@ public class TodosController : ControllerBase
             await _todoService.CreateAsync(dto);
             response.IsSuccess = true;
             response.Message = "Success";
-            _logger.Log(LogLevel.Trace, "Todo added {}", dto);
+            _logger.Log(LogLevel.Information, "Todo added {}", dto);
         }
         catch (Exception ex)
         {
@@ -43,5 +44,59 @@ public class TodosController : ControllerBase
         }
 
         return Created("todo", response);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(
+        [FromRoute] Guid id,
+        TodoUpdateDto dto
+    )
+    {
+        var response = new ResponseDTO();
+        try
+        {
+            dto.Id = id;
+            var entity = await _todoService.UpdateAsync(dto);
+            response.IsSuccess = true;
+            response.Message = "Success";
+            _logger.Log(LogLevel.Information, "Todo updated {}", entity);
+        }
+        catch (Exception ex)
+        {
+            response.IsSuccess = false;
+            response.Message = "Exception Occurs : " + ex.Message;
+        }
+
+        return Ok(response);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<TodoGetDto> GetById(
+        [FromRoute] Guid id
+    )
+    {
+        return await _todoService.GetById(id);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        [FromRoute] Guid id
+    )
+    {
+        var response = new ResponseDTO();
+        try
+        {
+            await _todoService.DeleteById(id);
+            response.IsSuccess = true;
+            response.Message = "Success";
+            _logger.Log(LogLevel.Information, "Todo deleted {}", id);
+        }
+        catch (Exception ex)
+        {
+            response.IsSuccess = false;
+            response.Message = "Exception Occurs : " + ex.Message;
+        }
+
+        return Ok(response);
     }
 }
