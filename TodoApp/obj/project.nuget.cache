@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "dgSpecHash": "i5QWQpEOwZ0woV3r0RsvNUa0g7EQkqRjT9bCKbme596hCtoNsu8cifjF20mbm4Gi7m05D+TIF2OqiGdM3PXAEg==",
+  "success": true,
+  "projectFilePath": "/Users/rhidoy/RiderProjects/TodoApp/TodoApp/TodoApp.csproj",
+  "expectedPackageFiles": [
+    "/Users/rhidoy/.nuget/packages/awssdk.core/3.7.100.14/awssdk.core.3.7.100.14.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/awssdk.securitytoken/3.7.100.14/awssdk.securitytoken.3.7.100.14.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/dnsclient/1.6.1/dnsclient.1.6.1.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.aspnetcore.openapi/7.0.11/microsoft.aspnetcore.openapi.7.0.11.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.extensions.apidescription.server/6.0.5/microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.extensions.logging.abstractions/2.0.0/microsoft.extensions.logging.abstractions.2.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.netcore.platforms/5.0.0/microsoft.netcore.platforms.5.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.openapi/1.4.3/microsoft.openapi.1.4.3.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/microsoft.win32.registry/5.0.0/microsoft.win32.registry.5.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/mongodb.bson/2.21.0/mongodb.bson.2.21.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/mongodb.driver/2.21.0/mongodb.driver.2.21.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/mongodb.driver.core/2.21.0/mongodb.driver.core.2.21.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/mongodb.libmongocrypt/1.8.0/mongodb.libmongocrypt.1.8.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/sharpcompress/0.30.1/sharpcompress.0.30.1.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/snappier/1.0.0/snappier.1.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/swashbuckle.aspnetcore/6.5.0/swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/swashbuckle.aspnetcore.swagger/6.5.0/swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/swashbuckle.aspnetcore.swaggergen/6.5.0/swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/swashbuckle.aspnetcore.swaggerui/6.5.0/swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/system.buffers/4.5.1/system.buffers.4.5.1.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/system.memory/4.5.5/system.memory.4.5.5.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/system.runtime.compilerservices.unsafe/5.0.0/system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/system.security.accesscontrol/5.0.0/system.security.accesscontrol.5.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/system.security.principal.windows/5.0.0/system.security.principal.windows.5.0.0.nupkg.sha512",
+    "/Users/rhidoy/.nuget/packages/zstdsharp.port/0.6.2/zstdsharp.port.0.6.2.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://nuget.selise.biz/nuget'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
+}
