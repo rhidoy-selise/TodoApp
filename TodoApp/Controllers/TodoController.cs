@@ -29,7 +29,7 @@ public class TodosController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Add(TodoCreateDto dto)
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             await _todoService.CreateAsync(dto);
@@ -52,7 +52,7 @@ public class TodosController : ControllerBase
         TodoUpdateDto dto
     )
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             dto.Id = id;
@@ -83,7 +83,7 @@ public class TodosController : ControllerBase
         [FromRoute] Guid id
     )
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             await _todoService.DeleteById(id);

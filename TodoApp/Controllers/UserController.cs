@@ -35,7 +35,7 @@ public class UsersController : ControllerBase
     [HttpPost("")]
     public async Task<IActionResult> Add(UserCreateDto user)
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             await _service.CreateAsync(user);
@@ -58,7 +58,7 @@ public class UsersController : ControllerBase
         UserUpdateDto dto
     )
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             dto.Id = id;
@@ -89,7 +89,7 @@ public class UsersController : ControllerBase
         [FromRoute] Guid id
     )
     {
-        var response = new ResponseDTO();
+        var response = new Response();
         try
         {
             await _service.DeleteById(id);
