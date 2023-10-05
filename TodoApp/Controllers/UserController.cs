@@ -8,12 +8,12 @@ namespace TodoApp.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
-    private readonly UserService _service;
+    private readonly IUserService _service;
     private readonly ILogger<UsersController> _logger;
 
     public UsersController(
         ILogger<UsersController> logger,
-        UserService userService)
+        IUserService userService)
     {
         _logger = logger;
         _service = userService;

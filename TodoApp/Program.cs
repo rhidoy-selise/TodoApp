@@ -1,6 +1,4 @@
 using MongoDB.Driver;
-using TodoApp.Models;
-using TodoApp.Repository;
 using TodoApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,8 +12,9 @@ builder.Services
             .GetSection("MongoDB:ConnectionUri").Value);
         return client.GetDatabase(builder.Configuration.GetSection("MongoDB:DatabaseName").Value);
     })
-    .AddSingleton<UserService>()
-    .AddSingleton<TodoService>();
+    .AddSingleton<IRabbitMqService, RabbitMqService>()
+    .AddSingleton<IUserService, UserService>()
+    .AddSingleton<ITodoService, TodoService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

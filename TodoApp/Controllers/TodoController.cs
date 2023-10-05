@@ -8,12 +8,12 @@ namespace TodoApp.Controllers;
 [ApiController]
 public class TodosController : ControllerBase
 {
-    private readonly TodoService _todoService;
+    private readonly ITodoService _todoService;
     private readonly ILogger<TodosController> _logger;
 
     public TodosController(
         ILogger<TodosController> logger,
-        TodoService todoService)
+        ITodoService todoService)
     {
         _logger = logger;
         _todoService = todoService;

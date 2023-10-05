@@ -1,3 +1,4 @@
+using System.Text;
 using MongoDB.Driver;
 using TodoApp.Dto;
 using TodoApp.Models;
@@ -10,20 +11,31 @@ public class TodoService : ITodoService
     private readonly ILogger<TodoService> _logger;
     private readonly IRepository<Todo> _todo;
     private readonly IRepository<User> _user;
+    private readonly IRabbitMqService _mqService;
+
+    private const string TodoExchangeName = "todoExchange";
+    private const string TodoRouteAdd = "todo.add";
+    private const string TodoRouteUpdate = "todo.update";
+    private const string TodoRouteDelete = "todo.delete";
 
     public TodoService(
         ILogger<TodoService> logger,
-        IMongoDatabase database
+        IMongoDatabase database,
+        IRabbitMqService mqService
     )
     {
         _logger = logger;
+        _mqService = mqService;
         _todo = new Repository<Todo>(database);
         _user = new Repository<User>(database);
+        AddConsumer();
     }
 
     public async Task CreateAsync(TodoCreateDto dto)
     {
-        await _todo.Insert(dto.GetTodo());
+        var entity = dto.GetTodo();
+        await _todo.Insert(entity);
+        _mqService.SendMessage(TodoExchangeName, TodoRouteAdd, entity);
     }
 
     public async Task<List<TodoGetDto>> GetAsync(int page, int pageSize)
@@ -51,18 +63,36 @@ public class TodoService : ITodoService
 
     public async Task DeleteById(Guid id)
     {
-        await _todo.Delete(id);
+        try
+        {
+            _logger.Log(LogLevel.Information, "Todo delete call {}", id);
+            await _todo.Delete(id);
+            _mqService.SendMessage(TodoExchangeName, TodoRouteDelete, id);
+        }
+        catch (Exception e)
+        {
+            _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+        }
     }
 
     public async Task<TodoGetDto> UpdateAsync(TodoUpdateDto dto)
     {
-        _logger.Log(LogLevel.Information, "Todo update call {}", dto);
-        var entity = await _todo.GetById(dto.Id);
-        dto.UpdateTodo(entity);
+        try
+        {
+            _logger.Log(LogLevel.Information, "Todo update call {}", dto);
+            var entity = await _todo.GetById(dto.Id);
+            dto.UpdateTodo(entity);
 
-        await _todo.Update(entity);
+            await _todo.Update(entity);
+            _mqService.SendMessage(TodoExchangeName, TodoRouteUpdate, entity);
 
-        return GetDto(entity, null).Result;
+            return GetDto(entity, null).Result;
+        }
+        catch (Exception e)
+        {
+            _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+            throw new Exception(e.Message);
+        }
     }
 
     private async Task<TodoGetDto> GetDto(Todo entity, List<User>? users)
@@ -86,9 +116,73 @@ public class TodoService : ITodoService
 
     private Task<List<User>> GetUsers(ICollection<Guid> userIds)
     {
-        return _user
-            .GetCollection()
-            .Find(u => userIds.Contains(u.Id))
-            .ToListAsync();
+        try
+        {
+            return _user
+                .GetCollection()
+                .Find(u => userIds.Contains(u.Id))
+                .ToListAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+            throw new Exception(e.Message);
+        }
+    }
+
+    private void AddConsumer()
+    {
+        var addConsumer = _mqService.AddConsumer(TodoExchangeName, TodoRouteAdd);
+        if (addConsumer != null)
+            addConsumer.Received += (model, ea) =>
+            {
+                try
+                {
+                    var body = ea.Body;
+                    var decodedString = Encoding.UTF8.GetString(body.ToArray());
+                    // var Todo = JsonConvert.DeserializeObject<Todo>(body.ToString());
+                    _logger.Log(LogLevel.Information, "Received message for routing key  {}, data {}", TodoRouteAdd,
+                        decodedString);
+                }
+                catch (Exception e)
+                {
+                    _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+                }
+            };
+
+        var updateConsumer = _mqService.AddConsumer(TodoExchangeName, TodoRouteUpdate);
+        if (updateConsumer != null)
+            updateConsumer.Received += (model, ea) =>
+            {
+                try
+                {
+                    var body = ea.Body;
+                    var decodedString = Encoding.UTF8.GetString(body.ToArray());
+                    // var Todo = JsonConvert.DeserializeObject<Todo>(decodedString);
+                    _logger.Log(LogLevel.Information, "Received message for routing key  {}, data {}", TodoRouteUpdate,
+                        decodedString);
+                }
+                catch (Exception e)
+                {
+                    _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+                }
+            };
+
+        var deleteConsumer = _mqService.AddConsumer(TodoExchangeName, TodoRouteDelete);
+        if (deleteConsumer != null)
+            deleteConsumer.Received += (model, ea) =>
+            {
+                try
+                {
+                    var body = ea.Body;
+                    var decodedString = Encoding.UTF8.GetString(body.ToArray());
+                    _logger.Log(LogLevel.Information, "Received message for routing key  {}, data {}", TodoRouteDelete,
+                        decodedString);
+                }
+                catch (Exception e)
+                {
+                    _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+                }
+            };
     }
 }
