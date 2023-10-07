@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.SignalR.Client;
 using MongoDB.Driver;
 using TodoApp.Dto;
 using TodoApp.Models;
@@ -12,6 +13,8 @@ public class TodoService : ITodoService
     private readonly IRepository<Todo> _todo;
     private readonly IRepository<User> _user;
     private readonly IRabbitMqService _mqService;
+    private readonly ISignalRService _signalR;
+    private readonly ISignalRClientService _signalRClient;
 
     private const string TodoExchangeName = "todoExchange";
     private const string TodoRouteAdd = "todo.add";
@@ -21,14 +24,19 @@ public class TodoService : ITodoService
     public TodoService(
         ILogger<TodoService> logger,
         IMongoDatabase database,
-        IRabbitMqService mqService
-    )
+        IRabbitMqService mqService,
+        ISignalRService signalR,
+        ISignalRClientService signalRClient
+        )
     {
         _logger = logger;
         _mqService = mqService;
+        _signalR = signalR;
+        _signalRClient = signalRClient;
         _todo = new Repository<Todo>(database);
         _user = new Repository<User>(database);
         AddConsumer();
+        ConnectSocket();
     }
 
     public async Task CreateAsync(TodoCreateDto dto)
@@ -36,6 +44,7 @@ public class TodoService : ITodoService
         var entity = dto.GetTodo();
         await _todo.Insert(entity);
         _mqService.SendMessage(TodoExchangeName, TodoRouteAdd, entity);
+        await _signalR.SendMessage(TodoRouteAdd, entity);
     }
 
     public async Task<List<TodoGetDto>> GetAsync(int page, int pageSize)
@@ -68,6 +77,7 @@ public class TodoService : ITodoService
             _logger.Log(LogLevel.Information, "Todo delete call {}", id);
             await _todo.Delete(id);
             _mqService.SendMessage(TodoExchangeName, TodoRouteDelete, id);
+            await _signalR.SendMessage(TodoRouteDelete, id);
         }
         catch (Exception e)
         {
@@ -85,6 +95,7 @@ public class TodoService : ITodoService
 
             await _todo.Update(entity);
             _mqService.SendMessage(TodoExchangeName, TodoRouteUpdate, entity);
+            await _signalR.SendMessage(TodoRouteUpdate, entity);
 
             return GetDto(entity, null).Result;
         }
@@ -184,5 +195,26 @@ public class TodoService : ITodoService
                     _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
                 }
             };
+    }
+
+    private void ConnectSocket()
+    {
+        _signalRClient.GetHubConnection().On<string>(TodoRouteAdd, (message) =>
+        {
+            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteAdd);
+
+        });
+
+        _signalRClient.GetHubConnection().On<string>(TodoRouteUpdate, (message) =>
+        {
+            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteUpdate);
+
+        });
+
+        _signalRClient.GetHubConnection().On<string>(TodoRouteDelete, (message) =>
+        {
+            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteDelete);
+
+        });
     }
 }

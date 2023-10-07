@@ -12,9 +12,15 @@ builder.Services
             .GetSection("MongoDB:ConnectionUri").Value);
         return client.GetDatabase(builder.Configuration.GetSection("MongoDB:DatabaseName").Value);
     })
+    .AddSingleton<SignalRClientHostedService>()
+    .AddSingleton<ISignalRService, SignalRService>()
+    .AddSingleton<ISignalRClientService, SignalRClientService>()
     .AddSingleton<IRabbitMqService, RabbitMqService>()
     .AddSingleton<IUserService, UserService>()
     .AddSingleton<ITodoService, TodoService>();
+
+builder.Services.AddSignalR();
+// builder.Services.AddHostedService<SignalRClientHostedService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -35,5 +41,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<SignalRHub>("/socket");
 
 app.Run();

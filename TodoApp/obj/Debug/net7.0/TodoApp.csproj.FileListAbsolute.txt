@@ -46,3 +46,14 @@
 /Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/runtimes/win/native/mongocrypt.dll
 /Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Newtonsoft.Json.dll
 /Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/RabbitMQ.Client.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.Connections.Abstractions.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.Http.Connections.Client.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.Http.Connections.Common.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.SignalR.Client.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.SignalR.Client.Core.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.SignalR.Common.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.AspNetCore.SignalR.Protocols.Json.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.Extensions.Features.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.Extensions.Logging.Abstractions.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/Microsoft.Extensions.Options.dll
+/Users/rhidoy/RiderProjects/TodoApp/TodoApp/bin/Debug/net7.0/System.Net.WebSockets.WebSocketProtocol.dll
