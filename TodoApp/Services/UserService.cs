@@ -1,54 +1,54 @@
-using MongoDB.Driver;
 using TodoApp.Dto;
 using TodoApp.Models;
 using TodoApp.Repository;
+using TodoApp.Utils;
 
 namespace TodoApp.Services;
 
 public class UserService : IUserService
 {
-    private readonly IRepository<User> _user;
+    private readonly IRepository _repository;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
-        IMongoDatabase database,
-        ILogger<UserService> logger
+        ILogger<UserService> logger,
+        IRepository repository
     )
     {
-        _user = new Repository<User>(database);
         _logger = logger;
+        _repository = repository;
     }
 
     public async Task CreateAsync(UserCreateDto dto)
     {
         _logger.Log(LogLevel.Information, "User add call {}", dto);
-        await _user.Insert(dto.GetUser());
+        await _repository.Insert(dto.GetUser());
     }
 
-    public async Task<List<User>> GetAsync(int page, int pageSize)
+    public async Task<List<User>> GetAsync(Paging paging)
     {
-        return await _user.GetAll(page, pageSize);
+        return await _repository.Get<User>(null, paging);
     }
 
     public async Task<UserGetDto?> UpdateAsync(UserUpdateDto dto)
     {
         _logger.Log(LogLevel.Information, "User update call {}", dto);
-        var entity = await _user.GetById(dto.Id);
+        var entity = await _repository.Get<User>(dto.Id);
         dto.UpdateUser(entity);
 
-        await _user.Update(entity);
+        await _repository.Update(entity);
 
         return UserGetDto.GetUserDto(entity);
     }
 
-    public async Task<UserGetDto?> GetById(Guid id)
+    public async Task<UserGetDto> GetById(Guid id)
     {
-        var entity = await _user.GetById(id);
+        var entity = await _repository.Get<User>(id);
         return UserGetDto.GetUserDto(entity);
     }
 
     public async Task DeleteById(Guid id)
     {
-        await _user.Delete(id);
+        await _repository.Delete<User>(id);
     }
 }

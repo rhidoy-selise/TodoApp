@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TodoApp.Dto;
 using TodoApp.Services;
+using TodoApp.Utils;
 
 namespace TodoApp.Controllers;
 
@@ -20,10 +21,10 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("")]
-    public async Task<List<UserGetDto?>> Get(int page = 1, int pageSize = 10)
+    public async Task<List<UserGetDto?>> Get(Paging page)
     {
         //get users
-        var users = await _service.GetAsync(page, pageSize);
+        var users = await _service.GetAsync(page);
 
         //convert to dto
         var tasks = users.Select(u => Task.FromResult(UserGetDto.GetUserDto(u)));
@@ -35,21 +36,16 @@ public class UsersController : ControllerBase
     [HttpPost("")]
     public async Task<IActionResult> Add(UserCreateDto user)
     {
-        var response = new Response();
         try
         {
             await _service.CreateAsync(user);
-            response.IsSuccess = true;
-            response.Message = "Success";
             _logger.Log(LogLevel.Information, "User added {}", user);
         }
         catch (Exception ex)
         {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
         }
 
-        return Created("user", response);
+        return Created("user", null);
     }
 
     [HttpPut("{id:guid}")]
@@ -58,22 +54,17 @@ public class UsersController : ControllerBase
         UserUpdateDto dto
     )
     {
-        var response = new Response();
         try
         {
             dto.Id = id;
             var user = await _service.UpdateAsync(dto);
-            response.IsSuccess = true;
-            response.Message = "Success";
             _logger.Log(LogLevel.Information, "User updated {}", user);
         }
         catch (Exception ex)
         {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
         }
 
-        return Ok(response);
+        return Ok();
     }
 
     [HttpGet("{id:guid}")]
@@ -89,20 +80,15 @@ public class UsersController : ControllerBase
         [FromRoute] Guid id
     )
     {
-        var response = new Response();
         try
         {
             await _service.DeleteById(id);
-            response.IsSuccess = true;
-            response.Message = "Success";
             _logger.Log(LogLevel.Information, "User delete {}", id);
         }
         catch (Exception ex)
         {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
         }
 
-        return Ok(response);
+        return Ok();
     }
 }

@@ -1,5 +1,12 @@
 using MongoDB.Driver;
+using TodoApp.CommandHandlers;
+using TodoApp.Commands;
+using TodoApp.Dto;
+using TodoApp.Queries;
+using TodoApp.QueryHandlers;
+using TodoApp.Repository;
 using TodoApp.Services;
+using TodoApp.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +23,14 @@ builder.Services
     .AddSingleton<ISignalRService, SignalRService>()
     .AddSingleton<ISignalRClientService, SignalRClientService>()
     .AddSingleton<IRabbitMqService, RabbitMqService>()
+    .AddSingleton<IRepository, Repository>()
     .AddSingleton<IUserService, UserService>()
+    .AddSingleton<Handler>()
+    .AddSingleton<IHandler<GetTodoByIdQuery, TodoGetDto>, GetTodoByIdQueryHandler>()
+    .AddSingleton<IHandler<DeleteTodoCommand, Task>, DeleteTodoCommandHandler>()
+    .AddSingleton<IHandler<AddTodoCommand, TodoGetDto>, AddTodoCommandHandler>()
+    .AddSingleton<IHandler<UpdateTodoCommand, TodoGetDto>, UpdateTodoCommandHandler>()
+    .AddSingleton<IHandler<GetTodoQuery, PagedList<TodoGetDto>>, GetTodoQueryHandler>()
     .AddSingleton<ITodoService, TodoService>();
 
 builder.Services.AddSignalR();
@@ -35,6 +49,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 

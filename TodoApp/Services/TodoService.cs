@@ -1,17 +1,19 @@
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
 using MongoDB.Driver;
+using TodoApp.Commands;
 using TodoApp.Dto;
 using TodoApp.Models;
+using TodoApp.Queries;
 using TodoApp.Repository;
+using TodoApp.Utils;
 
 namespace TodoApp.Services;
 
 public class TodoService : ITodoService
 {
     private readonly ILogger<TodoService> _logger;
-    private readonly IRepository<Todo> _todo;
-    private readonly IRepository<User> _user;
+    private readonly IRepository _repository;
     private readonly IRabbitMqService _mqService;
     private readonly ISignalRService _signalR;
     private readonly ISignalRClientService _signalRClient;
@@ -26,31 +28,32 @@ public class TodoService : ITodoService
         IMongoDatabase database,
         IRabbitMqService mqService,
         ISignalRService signalR,
-        ISignalRClientService signalRClient
+        ISignalRClientService signalRClient,
+        IRepository repository
         )
     {
         _logger = logger;
         _mqService = mqService;
         _signalR = signalR;
         _signalRClient = signalRClient;
-        _todo = new Repository<Todo>(database);
-        _user = new Repository<User>(database);
+        _repository = repository;
         AddConsumer();
         ConnectSocket();
     }
 
-    public async Task CreateAsync(TodoCreateDto dto)
+    public async Task<TodoGetDto> CreateAsync(AddTodoCommand dto)
     {
         var entity = dto.GetTodo();
-        await _todo.Insert(entity);
+        await _repository.Insert(entity);
         _mqService.SendMessage(TodoExchangeName, TodoRouteAdd, entity);
         await _signalR.SendMessage(TodoRouteAdd, entity);
+        return GetDto(entity, null).Result;
     }
 
-    public async Task<List<TodoGetDto>> GetAsync(int page, int pageSize)
+    public async Task<List<TodoGetDto>> GetAsync(GetTodoQuery query)
     {
         _logger.Log(LogLevel.Information, "Todo get call");
-        var todos = await _todo.GetAll(page, pageSize);
+        var todos = await _repository.Get<Todo>(null, query);
 
         var userIds = todos.Select(todo => todo.CreateUserGuid)
             .Concat(todos.Select(todo => todo.AssignedUserGuid))
@@ -66,7 +69,7 @@ public class TodoService : ITodoService
 
     public async Task<TodoGetDto> GetById(Guid id)
     {
-        var entity = await _todo.GetById(id);
+        var entity = await _repository.Get<Todo>(id);
         return GetDto(entity, null).Result;
     }
 
@@ -75,7 +78,7 @@ public class TodoService : ITodoService
         try
         {
             _logger.Log(LogLevel.Information, "Todo delete call {}", id);
-            await _todo.Delete(id);
+            await _repository.Delete<Todo>(id);
             _mqService.SendMessage(TodoExchangeName, TodoRouteDelete, id);
             await _signalR.SendMessage(TodoRouteDelete, id);
         }
@@ -85,15 +88,15 @@ public class TodoService : ITodoService
         }
     }
 
-    public async Task<TodoGetDto> UpdateAsync(TodoUpdateDto dto)
+    public async Task<TodoGetDto> UpdateAsync(UpdateTodoCommand dto)
     {
         try
         {
             _logger.Log(LogLevel.Information, "Todo update call {}", dto);
-            var entity = await _todo.GetById(dto.Id);
+            var entity = await _repository.Get<Todo>(dto.Id);
             dto.UpdateTodo(entity);
 
-            await _todo.Update(entity);
+            await _repository.Update(entity);
             _mqService.SendMessage(TodoExchangeName, TodoRouteUpdate, entity);
             await _signalR.SendMessage(TodoRouteUpdate, entity);
 
@@ -102,7 +105,7 @@ public class TodoService : ITodoService
         catch (Exception e)
         {
             _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
-            throw new Exception(e.Message);
+            throw;
         }
     }
 
@@ -129,10 +132,8 @@ public class TodoService : ITodoService
     {
         try
         {
-            return _user
-                .GetCollection()
-                .Find(u => userIds.Contains(u.Id))
-                .ToListAsync();
+            return _repository
+                .Get<User>(u => userIds.Contains(u.Id), new Paging());
         }
         catch (Exception e)
         {
@@ -199,22 +200,22 @@ public class TodoService : ITodoService
 
     private void ConnectSocket()
     {
-        _signalRClient.GetHubConnection().On<string>(TodoRouteAdd, (message) =>
-        {
-            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteAdd);
+        _signalRClient.GetHubConnection().On<string>(TodoRouteAdd,
+            (message) =>
+            {
+                _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteAdd);
+            });
 
-        });
+        _signalRClient.GetHubConnection().On<string>(TodoRouteUpdate,
+            (message) =>
+            {
+                _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteUpdate);
+            });
 
-        _signalRClient.GetHubConnection().On<string>(TodoRouteUpdate, (message) =>
-        {
-            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteUpdate);
-
-        });
-
-        _signalRClient.GetHubConnection().On<string>(TodoRouteDelete, (message) =>
-        {
-            _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteDelete);
-
-        });
+        _signalRClient.GetHubConnection().On<string>(TodoRouteDelete,
+            (message) =>
+            {
+                _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteDelete);
+            });
     }
 }

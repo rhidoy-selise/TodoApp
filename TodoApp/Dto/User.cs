@@ -30,10 +30,10 @@ public class UserGetDto : UserCreateDto
     public DateTime CreateDate { get; set; }
     public DateTime? UpdateDate { get; set; }
 
-    public static UserGetDto? GetUserDto(User? user)
+    public static UserGetDto GetUserDto(User user)
     {
         if (user == null) {
-            return null;
+            throw new NotSupportedException("User can't be null");
         }
 
         var dto = new UserGetDto

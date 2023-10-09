@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using TodoApp.Commands;
 using TodoApp.Dto;
-using TodoApp.Services;
+using TodoApp.Queries;
+using TodoApp.Utils;
 
 namespace TodoApp.Controllers;
 
@@ -8,95 +10,42 @@ namespace TodoApp.Controllers;
 [ApiController]
 public class TodosController : ControllerBase
 {
-    private readonly ITodoService _todoService;
-    private readonly ILogger<TodosController> _logger;
+    private readonly Handler _handler;
 
-    public TodosController(
-        ILogger<TodosController> logger,
-        ITodoService todoService)
+    public TodosController(Handler handler)
     {
-        _logger = logger;
-        _todoService = todoService;
+        _handler = handler;
     }
 
-    [HttpGet]
-    public async Task<List<TodoGetDto>> Get(int page = 1, int pageSize = 10)
+    [HttpPost("get")]
+    public async Task<PagedList<TodoGetDto>> Get(GetTodoQuery query)
     {
-        _logger.Log(LogLevel.Information, "Todo get call");
-        return await _todoService.GetAsync(page, pageSize);
+        return await _handler.HandleAsync<GetTodoQuery, PagedList<TodoGetDto>>(query);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Add(TodoCreateDto dto)
+    [HttpPost("add")]
+    public async Task<IActionResult> Add(AddTodoCommand command)
     {
-        var response = new Response();
-        try
-        {
-            await _todoService.CreateAsync(dto);
-            response.IsSuccess = true;
-            response.Message = "Success";
-            _logger.Log(LogLevel.Information, "Todo added {}", dto);
-        }
-        catch (Exception ex)
-        {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
-        }
-
-        return Created("todo", response);
+        var todo = await _handler.HandleAsync<AddTodoCommand, TodoGetDto>(command);
+        return Created("getById", todo);
     }
 
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(
-        [FromRoute] Guid id,
-        TodoUpdateDto dto
-    )
+    [HttpPost("update")]
+    public async Task<TodoGetDto> Update(UpdateTodoCommand command)
     {
-        var response = new Response();
-        try
-        {
-            dto.Id = id;
-            var entity = await _todoService.UpdateAsync(dto);
-            response.IsSuccess = true;
-            response.Message = "Success";
-            _logger.Log(LogLevel.Information, "Todo updated {}", entity);
-        }
-        catch (Exception ex)
-        {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
-        }
-
-        return Ok(response);
+        return await _handler.HandleAsync<UpdateTodoCommand, TodoGetDto>(command);
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<TodoGetDto> GetById(
-        [FromRoute] Guid id
-    )
+    [HttpPost("getById")]
+    public async Task<TodoGetDto> GetById(GetTodoByIdQuery query)
     {
-        return await _todoService.GetById(id);
+        return await _handler.HandleAsync<GetTodoByIdQuery, TodoGetDto>(query);
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Delete(
-        [FromRoute] Guid id
-    )
+    [HttpPost("delete")]
+    public IActionResult Delete(DeleteTodoCommand command)
     {
-        var response = new Response();
-        try
-        {
-            await _todoService.DeleteById(id);
-            response.IsSuccess = true;
-            response.Message = "Success";
-            _logger.Log(LogLevel.Information, "Todo deleted {}", id);
-        }
-        catch (Exception ex)
-        {
-            response.IsSuccess = false;
-            response.Message = "Exception Occurs : " + ex.Message;
-        }
-
-        return Ok(response);
+        _handler.Handle<DeleteTodoCommand, Task>(command);
+        return NoContent();
     }
 }

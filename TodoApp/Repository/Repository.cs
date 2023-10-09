@@ -1,34 +1,44 @@
+using System.Linq.Expressions;
 using MongoDB.Driver;
+using TodoApp.Utils;
 
 namespace TodoApp.Repository;
 
-public class Repository<T> : IRepository<T> where T : class
+public class Repository : IRepository
 {
-    private readonly IMongoCollection<T> _collection;
+    private readonly IMongoDatabase _database;
 
     public Repository(IMongoDatabase database)
     {
-        _collection = database.GetCollection<T>(typeof(T).Name.ToLower());
+        _database = database;
     }
 
-    public IMongoCollection<T> GetCollection()
+    public async Task<List<T>> Get<T>(
+        Expression<Func<T, bool>>? filters,
+        Paging paging
+    )
     {
-        return _collection;
+        var filterDefinition = filters != null
+            ? Builders<T>.Filter.Where(filters)
+            : Builders<T>.Filter.Empty;
+
+        return await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .Find(filterDefinition)
+            .Skip(paging.GetOffset())
+            .Limit(paging.PerPage)
+            .ToListAsync();
     }
 
-    public async Task<List<T>> GetAll(int page, int pageSize)
+    public async Task<T> Get<T>(Expression<Func<T, bool>> filters)
     {
-        var findOptions = new FindOptions<T>
-        {
-            Skip = (page - 1) * pageSize,
-            Limit = pageSize
-        };
-
-        var cursor = await _collection.FindAsync(_ => true, findOptions);
-        return await cursor.ToListAsync();
+        return await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .Find(filters)
+            .FirstOrDefaultAsync();
     }
 
-    public async Task<T> GetById(Guid id)
+    public async Task<T> Get<T>(Guid id)
     {
         var idProperty = typeof(T).GetProperty("Id");
         if (idProperty == null)
@@ -37,7 +47,10 @@ public class Repository<T> : IRepository<T> where T : class
         }
 
         var filter = Builders<T>.Filter.Eq(idProperty.Name, id);
-        var entity = await _collection.Find(filter).FirstOrDefaultAsync();
+        var entity = await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .Find(filter)
+            .FirstOrDefaultAsync();
 
         if (entity == null)
         {
@@ -47,22 +60,18 @@ public class Repository<T> : IRepository<T> where T : class
         return entity;
     }
 
-    public async Task Insert(T entity)
+    public async Task Insert<T>(T entity)
     {
-        await _collection.InsertOneAsync(entity);
+        await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .InsertOneAsync(entity);
     }
 
-    public async Task Update(T entity)
+    public async Task Update<T>(Expression<Func<T, bool>> filters, T entity)
     {
-        var idProperty = entity.GetType().GetProperty("Id");
-        if (idProperty == null)
-        {
-            throw new ArgumentException("The entity does not have an Id property.");
-        }
-
-        var idValue = idProperty.GetValue(entity);
-        var filter = Builders<T>.Filter.Eq("_id", idValue);
-        var result = await _collection.ReplaceOneAsync(filter, entity);
+        var result = await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .ReplaceOneAsync(filters, entity);
 
         if (!result.IsAcknowledged)
         {
@@ -70,7 +79,38 @@ public class Repository<T> : IRepository<T> where T : class
         }
     }
 
-    public async Task Delete(Guid id)
+    public async Task Update<T>(T entity)
+    {
+        var idProperty = entity?.GetType().GetProperty("Id");
+        if (idProperty == null)
+        {
+            throw new ArgumentException("The entity does not have an Id property.");
+        }
+
+        var idValue = idProperty.GetValue(entity);
+        var filter = Builders<T>.Filter.Eq("_id", idValue);
+        var result = await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .ReplaceOneAsync(filter, entity);
+
+        if (!result.IsAcknowledged)
+        {
+            throw new Exception("Entity update failed");
+        }
+    }
+
+    public async Task Delete<T>(Expression<Func<T, bool>> filters)
+    {
+        var result = await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .DeleteOneAsync(filters);
+        if (result.DeletedCount == 0)
+        {
+            throw new Exception("Entity delete failed");
+        }
+    }
+
+    public async Task Delete<T>(Guid id)
     {
         var idProperty = typeof(T).GetProperty("Id");
         if (idProperty == null)
@@ -79,7 +119,9 @@ public class Repository<T> : IRepository<T> where T : class
         }
 
         var filter = Builders<T>.Filter.Eq(idProperty.Name, id);
-        var result = await _collection.DeleteOneAsync(filter);
+        var result = await _database
+            .GetCollection<T>(typeof(T).Name.ToLower())
+            .DeleteOneAsync(filter);
         if (result.DeletedCount == 0)
         {
             throw new Exception("Entity delete failed");
