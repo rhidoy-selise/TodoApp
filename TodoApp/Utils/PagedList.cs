@@ -6,17 +6,17 @@ public sealed class PagedList<T>
 {
     public List<T> Content { get; } = new();
 
-    public int TotalPages => Size == 0 ? Paging.DefaultPage : (int)Math.Ceiling((double)TotalElements / Size);
+    public int TotalPages => PerPage == 0 ? Paging.DefaultPage : (int)Math.Ceiling((double)TotalElements / PerPage);
 
     public int TotalElements { get; set; }
 
-    public bool IsLast => Number == TotalPages;
+    public bool IsLast => Page == TotalPages;
 
-    public int Number { get; set; }
+    public int Page { get; set; }
 
-    public int Size { get; set; }
+    public int PerPage { get; set; }
 
-    public bool IsFirst => Number == Paging.DefaultPage;
+    public bool IsFirst => Page == Paging.DefaultPage;
 
     public int NumberOfElements => Content.Count;
 
@@ -30,8 +30,8 @@ public sealed class PagedList<T>
     {
         PagedList<T> pagedList = new PagedList<T>
         {
-            Number = page,
-            Size = perPage,
+            Page = page,
+            PerPage = perPage,
             TotalElements = total
         };
         return pagedList;

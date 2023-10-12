@@ -10,9 +10,9 @@ namespace TodoApp.Controllers;
 [ApiController]
 public class TodosController : ControllerBase
 {
-    private readonly Handler _handler;
+    private readonly IHandlerService _handler;
 
-    public TodosController(Handler handler)
+    public TodosController(IHandlerService handler)
     {
         _handler = handler;
     }

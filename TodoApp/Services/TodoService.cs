@@ -16,7 +16,7 @@ public class TodoService : ITodoService
     private readonly IRepository _repository;
     private readonly IRabbitMqService _mqService;
     private readonly ISignalRService _signalR;
-    private readonly ISignalRClientService _signalRClient;
+    private readonly HubConnection? _hubConnection;
 
     private const string TodoExchangeName = "todoExchange";
     private const string TodoRouteAdd = "todo.add";
@@ -25,20 +25,22 @@ public class TodoService : ITodoService
 
     public TodoService(
         ILogger<TodoService> logger,
-        IMongoDatabase database,
         IRabbitMqService mqService,
         ISignalRService signalR,
         ISignalRClientService signalRClient,
         IRepository repository
-        )
+    )
     {
         _logger = logger;
         _mqService = mqService;
         _signalR = signalR;
-        _signalRClient = signalRClient;
+        _hubConnection = signalRClient.GetHubConnection();
         _repository = repository;
         AddConsumer();
-        ConnectSocket();
+        if (_hubConnection != null)
+        {
+            ConnectSocket();
+        }
     }
 
     public async Task<TodoGetDto> CreateAsync(AddTodoCommand dto)
@@ -200,19 +202,20 @@ public class TodoService : ITodoService
 
     private void ConnectSocket()
     {
-        _signalRClient.GetHubConnection().On<string>(TodoRouteAdd,
+        if (_hubConnection == null) return;
+        _hubConnection.On<string>(TodoRouteAdd,
             (message) =>
             {
                 _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteAdd);
             });
 
-        _signalRClient.GetHubConnection().On<string>(TodoRouteUpdate,
+        _hubConnection.On<string>(TodoRouteUpdate,
             (message) =>
             {
                 _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteUpdate);
             });
 
-        _signalRClient.GetHubConnection().On<string>(TodoRouteDelete,
+        _hubConnection.On<string>(TodoRouteDelete,
             (message) =>
             {
                 _logger.Log(LogLevel.Information, "socket message {} on topic {}", message, TodoRouteDelete);

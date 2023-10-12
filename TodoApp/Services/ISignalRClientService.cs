@@ -4,5 +4,5 @@ namespace TodoApp.Services;
 
 public interface ISignalRClientService
 {
-    HubConnection GetHubConnection();
+    HubConnection? GetHubConnection();
 }

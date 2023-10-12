@@ -25,7 +25,7 @@ builder.Services
     .AddSingleton<IRabbitMqService, RabbitMqService>()
     .AddSingleton<IRepository, Repository>()
     .AddSingleton<IUserService, UserService>()
-    .AddSingleton<Handler>()
+    .AddSingleton<IHandlerService, Handler>()
     .AddSingleton<IHandler<GetTodoByIdQuery, TodoGetDto>, GetTodoByIdQueryHandler>()
     .AddSingleton<IHandler<DeleteTodoCommand, Task>, DeleteTodoCommandHandler>()
     .AddSingleton<IHandler<AddTodoCommand, TodoGetDto>, AddTodoCommandHandler>()
