@@ -31,7 +31,7 @@ public class AddTodoCommandHandler : IHandler<AddTodoCommand, TodoGetDto>
             GetType().Name, JsonConvert.SerializeObject(query));
         try
         {
-            return await _service.CreateAsync(query);
+            return await _service.AddAsync(query);
         }
         catch (Exception e)
         {

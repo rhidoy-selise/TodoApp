@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.AspNetCore.SignalR.Client;
-using MongoDB.Driver;
 using TodoApp.Commands;
 using TodoApp.Dto;
 using TodoApp.Models;
@@ -43,18 +42,16 @@ public class TodoService : ITodoService
         }
     }
 
-    public async Task<TodoGetDto> CreateAsync(AddTodoCommand dto)
+    public async Task<List<TodoGetDto>> GetAsync(TodosQuery query)
     {
-        var entity = dto.GetTodo();
-        await _repository.Insert(entity);
-        _mqService.SendMessage(TodoExchangeName, TodoRouteAdd, entity);
-        await _signalR.SendMessage(TodoRouteAdd, entity);
-        return GetDto(entity, null).Result;
-    }
+        if (query.Id.HasValue)
+        {
+            return new List<TodoGetDto>()
+            {
+                GetAsync(query.Id.Value).Result
+            };
+        }
 
-    public async Task<List<TodoGetDto>> GetAsync(GetTodoQuery query)
-    {
-        _logger.Log(LogLevel.Information, "Todo get call");
         var todos = await _repository.Get<Todo>(null, query);
 
         var userIds = todos.Select(todo => todo.CreateUserGuid)
@@ -69,24 +66,27 @@ public class TodoService : ITodoService
             .ToList();
     }
 
-    public async Task<TodoGetDto> GetById(Guid id)
+    public async Task<TodoGetDto> GetAsync(Guid id)
     {
         var entity = await _repository.Get<Todo>(id);
         return GetDto(entity, null).Result;
     }
 
-    public async Task DeleteById(Guid id)
+    public async Task<TodoGetDto> AddAsync(AddTodoCommand dto)
     {
         try
         {
-            _logger.Log(LogLevel.Information, "Todo delete call {}", id);
-            await _repository.Delete<Todo>(id);
-            _mqService.SendMessage(TodoExchangeName, TodoRouteDelete, id);
-            await _signalR.SendMessage(TodoRouteDelete, id);
+            _logger.LogInformation("Todo add call {}", dto);
+            var entity = dto.GetTodo();
+            await _repository.Insert(entity);
+            _mqService.SendMessage(TodoExchangeName, TodoRouteAdd, entity);
+            await _signalR.SendMessage(TodoRouteAdd, entity);
+            return GetDto(entity, null).Result;
         }
         catch (Exception e)
         {
-            _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+            _logger.LogError("Exception found at todo add. {}", e.Message);
+            throw;
         }
     }
 
@@ -94,7 +94,7 @@ public class TodoService : ITodoService
     {
         try
         {
-            _logger.Log(LogLevel.Information, "Todo update call {}", dto);
+            _logger.LogInformation("Todo update call {}", dto);
             var entity = await _repository.Get<Todo>(dto.Id);
             dto.UpdateTodo(entity);
 
@@ -106,7 +106,23 @@ public class TodoService : ITodoService
         }
         catch (Exception e)
         {
-            _logger.Log(LogLevel.Trace, "Exception found {}", e.Message);
+            _logger.LogError("Exception found at todo update. {}", e.Message);
+            throw;
+        }
+    }
+
+    public async Task Delete(Guid id)
+    {
+        try
+        {
+            _logger.LogInformation("Todo delete call {}", id);
+            await _repository.Delete<Todo>(id);
+            _mqService.SendMessage(TodoExchangeName, TodoRouteDelete, id);
+            await _signalR.SendMessage(TodoRouteDelete, id);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Exception found at todo delete. {}", e.Message);
             throw;
         }
     }

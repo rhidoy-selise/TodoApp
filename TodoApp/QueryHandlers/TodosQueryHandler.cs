@@ -6,32 +6,30 @@ using TodoApp.Utils;
 
 namespace TodoApp.QueryHandlers;
 
-public class GetTodoByIdQueryHandler : IHandler<GetTodoByIdQuery, TodoGetDto>
+public class TodosQueryHandler : IHandler<TodosQuery, PagedList<TodoGetDto>>
 {
     private readonly ITodoService _service;
-    private readonly ILogger<GetTodoByIdQueryHandler> _logger;
+    private readonly ILogger<TodosQueryHandler> _logger;
 
-    public GetTodoByIdQueryHandler(
-        ITodoService service,
-        ILogger<GetTodoByIdQueryHandler> logger
-    )
+    public TodosQueryHandler(ITodoService service, ILogger<TodosQueryHandler> logger)
     {
         _service = service;
         _logger = logger;
     }
 
-    public TodoGetDto Handle(GetTodoByIdQuery query)
+    public PagedList<TodoGetDto> Handle(TodosQuery query)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<TodoGetDto> HandleAsync(GetTodoByIdQuery query)
+    public async Task<PagedList<TodoGetDto>> HandleAsync(TodosQuery query)
     {
         _logger.LogInformation("Enter {TodoByIdHandlerName} with payload: {SerializeObject}",
-            nameof(GetTodoByIdQueryHandler), JsonConvert.SerializeObject(query));
+            GetType().Name, JsonConvert.SerializeObject(query));
         try
         {
-            return await _service.GetById(query.Id);
+            var list = await _service.GetAsync(query);
+            return PagedList<TodoGetDto>.GetPagedList(list, query);
         }
         catch (Exception e)
         {

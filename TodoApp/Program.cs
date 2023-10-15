@@ -26,11 +26,10 @@ builder.Services
     .AddSingleton<IRepository, Repository>()
     .AddSingleton<IUserService, UserService>()
     .AddSingleton<IHandlerService, Handler>()
-    .AddSingleton<IHandler<GetTodoByIdQuery, TodoGetDto>, GetTodoByIdQueryHandler>()
     .AddSingleton<IHandler<DeleteTodoCommand, Task>, DeleteTodoCommandHandler>()
     .AddSingleton<IHandler<AddTodoCommand, TodoGetDto>, AddTodoCommandHandler>()
     .AddSingleton<IHandler<UpdateTodoCommand, TodoGetDto>, UpdateTodoCommandHandler>()
-    .AddSingleton<IHandler<GetTodoQuery, PagedList<TodoGetDto>>, GetTodoQueryHandler>()
+    .AddSingleton<IHandler<TodosQuery, PagedList<TodoGetDto>>, TodosQueryHandler>()
     .AddSingleton<ITodoService, TodoService>();
 
 builder.Services.AddSignalR();

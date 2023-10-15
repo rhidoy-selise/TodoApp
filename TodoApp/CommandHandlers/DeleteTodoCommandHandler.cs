@@ -25,7 +25,7 @@ public class DeleteTodoCommandHandler : IHandler<DeleteTodoCommand, Task>
             GetType().Name, JsonConvert.SerializeObject(query));
         try
         {
-            _service.DeleteById(query.Id);
+            _service.Delete(query.Id);
         }
         catch (Exception e)
         {

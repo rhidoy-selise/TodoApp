@@ -18,9 +18,9 @@ public class TodosController : ControllerBase
     }
 
     [HttpPost("get")]
-    public async Task<PagedList<TodoGetDto>> Get(GetTodoQuery query)
+    public async Task<PagedList<TodoGetDto>> Get(TodosQuery query)
     {
-        return await _handler.HandleAsync<GetTodoQuery, PagedList<TodoGetDto>>(query);
+        return await _handler.HandleAsync<TodosQuery, PagedList<TodoGetDto>>(query);
     }
 
     [HttpPost("add")]
@@ -34,12 +34,6 @@ public class TodosController : ControllerBase
     public async Task<TodoGetDto> Update(UpdateTodoCommand command)
     {
         return await _handler.HandleAsync<UpdateTodoCommand, TodoGetDto>(command);
-    }
-
-    [HttpPost("getById")]
-    public async Task<TodoGetDto> GetById(GetTodoByIdQuery query)
-    {
-        return await _handler.HandleAsync<GetTodoByIdQuery, TodoGetDto>(query);
     }
 
     [HttpPost("delete")]
