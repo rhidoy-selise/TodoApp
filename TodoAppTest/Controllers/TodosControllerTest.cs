@@ -23,7 +23,7 @@ public class TodosControllerTest
     {
         //arrange
         var todos = GetTodos()
-            .Select(TodoGetDto.GetDto)
+            .Select(TodoResponse.GetDto)
             .ToList();
         var getQuery = new TodosQuery()
         {
@@ -32,8 +32,8 @@ public class TodosControllerTest
             Total = todos.Count
         };
         _handler
-            .Setup(h => h.HandleAsync<TodosQuery, PagedList<TodoGetDto>>(getQuery))
-            .Returns(Task.FromResult(PagedList<TodoGetDto>.GetPagedList(todos, getQuery)));
+            .Setup(h => h.HandleAsync(getQuery))
+            .Returns(Task.FromResult(new HandlerResponse(todos)));
         var controller = new TodosController(_handler.Object);
 
         //act
@@ -42,24 +42,22 @@ public class TodosControllerTest
         //assert
         _handler.Verify();
         Assert.NotNull(result);
-        Assert.Equal(result.NumberOfElements, todos.Count);
-        Assert.Equal(1, result.TotalPages);
-        Assert.Equal(10, result.PerPage);
-        Assert.Equal(result.Content.Count, todos.Count);
+        Assert.NotEmpty(result.Results);
+        Assert.Equal(result.Results.Count, todos.Count);
     }
 
     [Fact]
     public async void GetById()
     {
         //arrange
-        var todo = TodoGetDto.GetDto(GetTodos()[0]);
+        var todo = TodoResponse.GetDto(GetTodos()[0]);
         var getQuery = new TodosQuery()
         {
             Id = Guid.NewGuid()
         };
         _handler
-            .Setup(h => h.HandleAsync<TodosQuery, PagedList<TodoGetDto>>(getQuery))
-            .Returns(Task.FromResult(PagedList<TodoGetDto>.GetPagedList(new List<TodoGetDto>() { todo }, getQuery)));
+            .Setup(h => h.HandleAsync(getQuery))
+            .Returns(Task.FromResult(new HandlerResponse(new List<object> { todo })));
         var controller = new TodosController(_handler.Object);
 
         //act
@@ -68,9 +66,12 @@ public class TodosControllerTest
         //assert
         _handler.Verify();
         Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.Equal(1, result.NumberOfElements);
-        Assert.Single(result.Content);
+        Assert.Single(result.Results);
+        var data = result.Results[0] as TodoResponse;
+        Assert.NotNull(data);
+        Assert.Equal(data.Id, todo.Id);
+        Assert.Equal(data.Name, todo.Name);
+        Assert.Equal(data.Description, todo.Description);
     }
 
     [Fact]
@@ -86,8 +87,8 @@ public class TodosControllerTest
         };
 
         _handler
-            .Setup(h => h.HandleAsync<AddTodoCommand, TodoGetDto>(command))
-            .Returns(Task.FromResult(TodoGetDto.GetDto(command.GetTodo())));
+            .Setup(h => h.HandleAsync(command))
+            .Returns(Task.FromResult(new HandlerResponse(new List<object> { TodoResponse.GetDto(command.GetTodo()) })));
         var controller = new TodosController(_handler.Object);
 
         //act
@@ -100,17 +101,10 @@ public class TodosControllerTest
         Assert.NotNull(objectResult);
         if (objectResult == null) return;
         Assert.Equal(objectResult.StatusCode, 201);
-        var value = objectResult.Value;
-        Assert.NotNull(value);
-        switch (value)
-        {
-            case null:
-                return;
-            case TodoGetDto dto:
-                Assert.Equal(dto.Name, command.Name);
-                Assert.Equal(dto.Description, command.Description);
-                break;
-        }
+        var data = objectResult.Value as TodoResponse;
+        Assert.NotNull(data);
+        Assert.Equal(data.Name, command.Name);
+        Assert.Equal(data.Description, command.Description);
     }
 
     [Fact]
@@ -125,7 +119,7 @@ public class TodosControllerTest
             Name = "Todo 1",
             Status = TodoStatus.Approved
         };
-        var getDto = new TodoGetDto()
+        var getDto = new TodoResponse()
         {
             AssignedUser = null,
             Complete = command.Complete,
@@ -139,8 +133,8 @@ public class TodosControllerTest
         };
 
         _handler
-            .Setup(h => h.HandleAsync<UpdateTodoCommand, TodoGetDto>(command))
-            .Returns(Task.FromResult(getDto));
+            .Setup(h => h.HandleAsync(command))
+            .Returns(Task.FromResult(new HandlerResponse(new List<object> { getDto })));
         var controller = new TodosController(_handler.Object);
 
         //act
@@ -166,8 +160,8 @@ public class TodosControllerTest
         };
 
         _handler
-            .Setup(h => h.Handle<DeleteTodoCommand, Task>(command))
-            .Returns(Task.FromResult(Task.CompletedTask));
+            .Setup(h => h.Handle(command))
+            .Returns(new HandlerResponse(null));
         var controller = new TodosController(_handler.Object);
 
         //act

@@ -25,7 +25,7 @@ public class TodosQueryHandlerTest
     {
         //arrange
         var todos = TodosControllerTest.GetTodos()
-            .Select(TodoGetDto.GetDto)
+            .Select(TodoResponse.GetDto)
             .ToList();
         var getQuery = new TodosQuery()
         {
@@ -43,17 +43,16 @@ public class TodosQueryHandlerTest
         //assert
         _service.Verify();
         Assert.NotNull(result);
-        Assert.Equal(result.NumberOfElements, todos.Count);
-        Assert.Equal(1, result.TotalPages);
-        Assert.Equal(10, result.PerPage);
-        Assert.Equal(result.Content.Count, todos.Count);
+        Assert.NotEmpty(result.Results);
+        var data = result.Results;
+        Assert.Equal(data.Count, todos.Count);
     }
 
     [Fact]
     public async void GetById()
     {
         //arrange
-        var todo = TodoGetDto.GetDto(TodosControllerTest.GetTodos()[0]);
+        var todo = TodoResponse.GetDto(TodosControllerTest.GetTodos()[0]);
 
         var getQuery = new TodosQuery()
         {
@@ -61,7 +60,7 @@ public class TodosQueryHandlerTest
         };
         _service
             .Setup(h => h.GetAsync(getQuery))
-            .Returns(Task.FromResult(new List<TodoGetDto>(){todo}));
+            .Returns(Task.FromResult(new List<TodoResponse>() { todo }));
 
         //act
         var result = await _handler.HandleAsync(getQuery);
@@ -69,9 +68,9 @@ public class TodosQueryHandlerTest
         //assert
         _service.Verify();
         Assert.NotNull(result);
-        Assert.NotNull(result);
-        Assert.NotNull(result.Content);
-        Assert.Equal(1, result.NumberOfElements);
-        Assert.Single(result.Content);
+        Assert.Single(result.Results);
+        var data = result.Results[0] as TodoResponse;
+        Assert.NotNull(data);
+        Assert.Equal(data.Id, todo.Id);
     }
 }

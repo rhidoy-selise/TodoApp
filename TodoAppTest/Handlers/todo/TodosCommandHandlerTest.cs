@@ -11,9 +11,10 @@ namespace TodoAppTest.Handlers.todo;
 public class TodosCommandHandlerTest
 {
     private readonly Mock<ITodoService> _service;
-    public TodosCommandHandlerTest(Mock<ITodoService> service)
+
+    public TodosCommandHandlerTest()
     {
-        _service = service;
+        _service = new Mock<ITodoService>();
     }
 
     [Fact]
@@ -30,7 +31,7 @@ public class TodosCommandHandlerTest
 
         _service
             .Setup(h => h.AddAsync(todoCommand))
-            .Returns(Task.FromResult(TodoGetDto.GetDto(todoCommand.GetTodo())));
+            .Returns(Task.FromResult(TodoResponse.GetDto(todoCommand.GetTodo())));
 
         //act
         var logger = new Mock<ILogger<AddTodoCommandHandler>>();
@@ -40,8 +41,11 @@ public class TodosCommandHandlerTest
         //assert
         _service.Verify();
         Assert.NotNull(result);
-        Assert.Equal(result.Name, todoCommand.Name);
-        Assert.Equal(result.Description, todoCommand.Description);
+        Assert.NotEmpty(result.Results);
+        var data = result.Results[0] as TodoResponse;
+        Assert.NotNull(data);
+        Assert.Equal(data.Name, todoCommand.Name);
+        Assert.Equal(data.Description, todoCommand.Description);
     }
 
     [Fact]
@@ -56,7 +60,7 @@ public class TodosCommandHandlerTest
             Name = "Todo 1",
             Status = TodoStatus.Approved
         };
-        var getDto = new TodoGetDto()
+        var getDto = new TodoResponse()
         {
             AssignedUser = null,
             Complete = todoCommand.Complete,
@@ -81,11 +85,14 @@ public class TodosCommandHandlerTest
         //assert
         _service.Verify();
         Assert.NotNull(result);
-        Assert.Equal(result.Id, todoCommand.Id);
-        Assert.Equal(result.Name, todoCommand.Name);
-        Assert.Equal(result.Description, todoCommand.Description);
-        Assert.Equal(result.Complete, todoCommand.Complete);
-        Assert.Equal(result.Status, todoCommand.Status);
+        Assert.NotEmpty(result.Results);
+        var data = result.Results[0] as TodoResponse;
+        Assert.NotNull(data);
+        Assert.Equal(data.Id, todoCommand.Id);
+        Assert.Equal(data.Name, todoCommand.Name);
+        Assert.Equal(data.Description, todoCommand.Description);
+        Assert.Equal(data.Complete, todoCommand.Complete);
+        Assert.Equal(data.Status, todoCommand.Status);
     }
 
     [Fact]
@@ -109,5 +116,6 @@ public class TodosCommandHandlerTest
         //assert
         _service.Verify();
         Assert.NotNull(result);
+        Assert.Empty(result.Results);
     }
 }

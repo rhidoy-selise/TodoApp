@@ -150,14 +150,13 @@ public class TodosServiceTest
             Name = "Todo 1",
         };
 
-        var todo = TodosControllerTest.GetTodos()[0];
         var users = new List<User>()
         {
             new()
             {
                 CreateDate = DateTime.Now,
                 DateOfBirth = DateTime.Today,
-                Id = todo.CreateUserGuid,
+                Id = command.CreatedUserGuid,
                 Name = "User",
                 UpdateDate = null,
             },
@@ -165,7 +164,7 @@ public class TodosServiceTest
             {
                 CreateDate = DateTime.Now,
                 DateOfBirth = DateTime.Today,
-                Id = todo.AssignedUserGuid,
+                Id = command.AssignedUserGuid,
                 Name = "User",
                 UpdateDate = null,
             }
@@ -176,19 +175,15 @@ public class TodosServiceTest
             .Returns<Todo>((_) => Task.FromResult(Task.CompletedTask));
 
         _repository
-            .Setup(s => s.Get<User>(It.IsAny<Expression<Func<User, bool>>?>(), It.IsAny<Paging>()))
+            .Setup(s => s.Get(It.IsAny<Expression<Func<User, bool>>?>(), It.IsAny<Paging>()))
             .ReturnsAsync(users);
-        var mockCommand = new Mock<AddTodoCommand>();
-        mockCommand
-            .Setup(s => s.GetTodo())
-            .Returns(todo);
 
         //act
         var result = await _service.AddAsync(command);
 
         //assert
         _repository.Verify();
-        mockCommand.Verify();
+        // mockCommand.Verify();
         Assert.NotNull(result);
         Assert.Equal(result.Name, command.Name);
         Assert.Equal(result.Description, command.Description);
