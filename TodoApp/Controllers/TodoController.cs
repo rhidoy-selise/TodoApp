@@ -7,7 +7,6 @@ using TodoApp.Utils;
 
 namespace TodoApp.Controllers;
 
-
 [Authorize]
 [Route("api/todos")]
 [ApiController]
@@ -21,28 +20,32 @@ public class TodosController : ControllerBase
     }
 
     [HttpPost("get")]
-    public async Task<PagedList<TodoGetDto>> Get(TodosQuery query)
+    public async Task<HandlerResponse> Get(TodosQuery query)
     {
-        return await _handler.HandleAsync<TodosQuery, PagedList<TodoGetDto>>(query);
+        return await _handler.HandleAsync(query);
     }
 
     [HttpPost("add")]
     public async Task<IActionResult> Add(AddTodoCommand command)
     {
-        var todo = await _handler.HandleAsync<AddTodoCommand, TodoGetDto>(command);
-        return Created("getById", todo);
+        var result = await _handler.HandleAsync(command);
+        var data = ControllerUtil.GetData<TodoResponse>(result);
+
+        return CreatedAtAction(nameof(Get), new { id = data.Id }, data);
     }
 
     [HttpPost("update")]
-    public async Task<TodoGetDto> Update(UpdateTodoCommand command)
+    public async Task<TodoResponse> Update(UpdateTodoCommand command)
     {
-        return await _handler.HandleAsync<UpdateTodoCommand, TodoGetDto>(command);
+        var result = await _handler.HandleAsync(command);
+
+        return ControllerUtil.GetData<TodoResponse>(result);
     }
 
     [HttpPost("delete")]
     public IActionResult Delete(DeleteTodoCommand command)
     {
-        _handler.Handle<DeleteTodoCommand, Task>(command);
+        _handler.Handle(command);
         return NoContent();
     }
 }

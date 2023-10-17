@@ -5,7 +5,6 @@ using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using TodoApp.CommandHandlers;
 using TodoApp.Commands;
-using TodoApp.Dto;
 using TodoApp.Queries;
 using TodoApp.QueryHandlers;
 using TodoApp.Repository;
@@ -30,10 +29,10 @@ builder.Services
     .AddSingleton<IRepository, Repository>()
     .AddSingleton<IUserService, UserService>()
     .AddSingleton<IHandlerService, Handler>()
-    .AddSingleton<IHandler<DeleteTodoCommand, Task>, DeleteTodoCommandHandler>()
-    .AddSingleton<IHandler<AddTodoCommand, TodoGetDto>, AddTodoCommandHandler>()
-    .AddSingleton<IHandler<UpdateTodoCommand, TodoGetDto>, UpdateTodoCommandHandler>()
-    .AddSingleton<IHandler<TodosQuery, PagedList<TodoGetDto>>, TodosQueryHandler>()
+    .AddSingleton<IHandler<DeleteTodoCommand>, DeleteTodoCommandHandler>()
+    .AddSingleton<IHandler<AddTodoCommand>, AddTodoCommandHandler>()
+    .AddSingleton<IHandler<UpdateTodoCommand>, UpdateTodoCommandHandler>()
+    .AddSingleton<IHandler<TodosQuery>, TodosQueryHandler>()
     .AddSingleton<ITodoService, TodoService>();
 
 builder.Services.AddSignalR();

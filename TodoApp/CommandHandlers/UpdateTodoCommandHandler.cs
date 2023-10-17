@@ -6,7 +6,7 @@ using TodoApp.Utils;
 
 namespace TodoApp.CommandHandlers;
 
-public class UpdateTodoCommandHandler : IHandler<UpdateTodoCommand, TodoGetDto>
+public class UpdateTodoCommandHandler : IHandler<UpdateTodoCommand>
 {
     private readonly ITodoService _service;
     private readonly ILogger<UpdateTodoCommandHandler> _logger;
@@ -17,18 +17,19 @@ public class UpdateTodoCommandHandler : IHandler<UpdateTodoCommand, TodoGetDto>
         _logger = logger;
     }
 
-    public TodoGetDto Handle(UpdateTodoCommand query)
+    public HandlerResponse Handle(UpdateTodoCommand signal)
     {
-        throw new NotImplementedException();
+        return HandleAsync(signal).Result;
     }
 
-    public async Task<TodoGetDto> HandleAsync(UpdateTodoCommand query)
+    public async Task<HandlerResponse> HandleAsync(UpdateTodoCommand signal)
     {
         _logger.LogInformation("Enter {} with payload: {}",
-            GetType().Name, JsonConvert.SerializeObject(query));
+            GetType().Name, JsonConvert.SerializeObject(signal));
         try
         {
-            return await _service.UpdateAsync(query);
+            var result = await _service.UpdateAsync(signal);
+            return new HandlerResponse(new List<object> { result });
         }
         catch (Exception e)
         {

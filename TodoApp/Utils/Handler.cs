@@ -1,3 +1,5 @@
+using TodoApp.Dto;
+
 namespace TodoApp.Utils;
 
 public class Handler : IHandlerService
@@ -9,45 +11,45 @@ public class Handler : IHandlerService
         _serviceProvider = serviceProvider;
     }
 
-    private IHandler<TQuery, TQueryResponse> GetHandler<TQuery, TQueryResponse>(TQuery query)
+    private IHandler<TSignal> GetHandler<TSignal>(TSignal signal)
     {
-        if (query == null)
+        if (signal == null)
         {
-            throw new ArgumentNullException(nameof(query));
+            throw new ArgumentNullException(nameof(signal));
         }
 
-        var handlerType = typeof(IHandler<TQuery, TQueryResponse>);
+        var handlerType = typeof(IHandler<TSignal>);
 
-        if (_serviceProvider.GetService(handlerType) is not IHandler<TQuery, TQueryResponse> handler)
+        if (_serviceProvider.GetService(handlerType) is not IHandler<TSignal> handler)
         {
             throw new InvalidOperationException(
-                $"No handler found for type {query.GetType()} and response {typeof(TQueryResponse)}");
+                $"No handler found for type {signal.GetType()}");
         }
 
         return handler;
     }
 
-    public async Task<TQueryResponse> HandleAsync<TQuery, TQueryResponse>(TQuery query)
+    public HandlerResponse Handle<TSignal>(TSignal signal)
     {
-        var handler = GetHandler<TQuery, TQueryResponse>(query);
-        return await handler.HandleAsync(query);
+        var handler = GetHandler(signal);
+        return handler.Handle(signal);
     }
 
-    public TQueryResponse Handle<TQuery, TQueryResponse>(TQuery query)
+    public async Task<HandlerResponse> HandleAsync<TSignal>(TSignal signal)
     {
-        var handler = GetHandler<TQuery, TQueryResponse>(query);
-        return handler.Handle(query);
+        var handler = GetHandler(signal);
+        return await handler.HandleAsync(signal);
     }
 }
 
 public interface IHandlerService
 {
-    Task<TQueryResponse> HandleAsync<TQuery, TQueryResponse>(TQuery query);
-    TQueryResponse Handle<TQuery, TQueryResponse>(TQuery query);
+    HandlerResponse Handle<TSignal>(TSignal signal);
+    Task<HandlerResponse> HandleAsync<TSignal>(TSignal signal);
 }
 
-public interface IHandler<in TQuery, TQueryResponse>
+public interface IHandler<in TSignal>
 {
-    TQueryResponse Handle(TQuery query);
-    Task<TQueryResponse> HandleAsync(TQuery query);
+    HandlerResponse Handle(TSignal signal);
+    Task<HandlerResponse> HandleAsync(TSignal signal);
 }

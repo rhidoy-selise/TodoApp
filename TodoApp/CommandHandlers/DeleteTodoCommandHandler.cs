@@ -1,11 +1,12 @@
 using Newtonsoft.Json;
 using TodoApp.Commands;
+using TodoApp.Dto;
 using TodoApp.Services;
 using TodoApp.Utils;
 
 namespace TodoApp.CommandHandlers;
 
-public class DeleteTodoCommandHandler : IHandler<DeleteTodoCommand, Task>
+public class DeleteTodoCommandHandler : IHandler<DeleteTodoCommand>
 {
     private readonly ITodoService _service;
     private readonly ILogger<DeleteTodoCommandHandler> _logger;
@@ -19,13 +20,18 @@ public class DeleteTodoCommandHandler : IHandler<DeleteTodoCommand, Task>
         _logger = logger;
     }
 
-    public Task Handle(DeleteTodoCommand query)
+    public HandlerResponse Handle(DeleteTodoCommand signal)
+    {
+        return HandleAsync(signal).Result;
+    }
+
+    public async Task<HandlerResponse> HandleAsync(DeleteTodoCommand signal)
     {
         _logger.LogInformation("Enter {} with payload: {}",
-            GetType().Name, JsonConvert.SerializeObject(query));
+            GetType().Name, JsonConvert.SerializeObject(signal));
         try
         {
-            _service.Delete(query.Id);
+            await _service.Delete(signal.Id);
         }
         catch (Exception e)
         {
@@ -33,11 +39,6 @@ public class DeleteTodoCommandHandler : IHandler<DeleteTodoCommand, Task>
             throw;
         }
 
-        return Task.CompletedTask;
-    }
-
-    public Task<Task> HandleAsync(DeleteTodoCommand query)
-    {
-        throw new NotImplementedException();
+        return new HandlerResponse(null);
     }
 }

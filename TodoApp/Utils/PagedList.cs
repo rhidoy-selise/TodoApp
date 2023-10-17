@@ -2,58 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace TodoApp.Utils;
 
-public sealed class PagedList<T>
-{
-    public List<T> Content { get; } = new();
-
-    public int TotalPages => PerPage == 0 ? Paging.DefaultPage : (int)Math.Ceiling((double)TotalElements / PerPage);
-
-    public int TotalElements { get; set; }
-
-    public bool IsLast => Page == TotalPages;
-
-    public int Page { get; set; }
-
-    public int PerPage { get; set; }
-
-    public bool IsFirst => Page == Paging.DefaultPage;
-
-    public int NumberOfElements => Content.Count;
-
-    public bool IsEmpty => Content.Count == 0;
-
-    private PagedList()
-    {
-    }
-
-    public static PagedList<T> Build(int total, int page, int perPage)
-    {
-        PagedList<T> pagedList = new PagedList<T>
-        {
-            Page = page,
-            PerPage = perPage,
-            TotalElements = total
-        };
-        return pagedList;
-    }
-
-    public static PagedList<T> GetPagedList(List<T> results, Paging paging)
-    {
-        return GetPagedList(results, paging.Total, paging.Page, paging.PerPage);
-    }
-
-    public static PagedList<T> GetPagedList(List<T> results, int total, int page, int perPage)
-    {
-        var pagedList = Build(total, page, perPage);
-        if (results != null)
-        {
-            pagedList.Content.AddRange(results);
-        }
-
-        return pagedList;
-    }
-}
-
 public class Paging
 {
     public const int DefaultPage = 1;

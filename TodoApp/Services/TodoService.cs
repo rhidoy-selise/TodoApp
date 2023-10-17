@@ -42,11 +42,11 @@ public class TodoService : ITodoService
         }
     }
 
-    public async Task<List<TodoGetDto>> GetAsync(TodosQuery query)
+    public async Task<List<TodoResponse>> GetAsync(TodosQuery query)
     {
         if (query.Id.HasValue)
         {
-            return new List<TodoGetDto>()
+            return new List<TodoResponse>()
             {
                 GetAsync(query.Id.Value).Result
             };
@@ -66,13 +66,13 @@ public class TodoService : ITodoService
             .ToList();
     }
 
-    public async Task<TodoGetDto> GetAsync(Guid id)
+    public async Task<TodoResponse> GetAsync(Guid id)
     {
         var entity = await _repository.Get<Todo>(id);
         return GetDto(entity, null).Result;
     }
 
-    public async Task<TodoGetDto> AddAsync(AddTodoCommand dto)
+    public async Task<TodoResponse> AddAsync(AddTodoCommand dto)
     {
         try
         {
@@ -90,7 +90,7 @@ public class TodoService : ITodoService
         }
     }
 
-    public async Task<TodoGetDto> UpdateAsync(UpdateTodoCommand dto)
+    public async Task<TodoResponse> UpdateAsync(UpdateTodoCommand dto)
     {
         try
         {
@@ -127,7 +127,7 @@ public class TodoService : ITodoService
         }
     }
 
-    private async Task<TodoGetDto> GetDto(Todo entity, List<User>? users)
+    private async Task<TodoResponse> GetDto(Todo entity, List<User>? users)
     {
         if (users == null)
         {
@@ -139,7 +139,7 @@ public class TodoService : ITodoService
             users = await GetUsers(userIds.Distinct().ToList());
         }
 
-        var dto = TodoGetDto.GetDto(entity);
+        var dto = TodoResponse.GetDto(entity);
         dto.CreatedUser = UserGetDto.GetUserDto(users.FirstOrDefault(u => u.Id == entity.CreateUserGuid));
         dto.AssignedUser = UserGetDto.GetUserDto(users.FirstOrDefault(u => u.Id == entity.AssignedUserGuid));
 
